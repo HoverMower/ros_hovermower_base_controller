@@ -35,11 +35,11 @@ typedef struct
    bool calibrated;
    bool bumperLeft;
    bool bumperRight;
-   byte buttonCount; // 18 bytes
+   unsigned char buttonCount; // 18 bytes
    int16_t batVoltage;
    int16_t chgVoltage;
    int16_t chgCurrent; // 24 bytes
-   byte chgStatus;     // 0 = not connected, 1 = in Station, 2 = charging
+   unsigned char chgStatus;     // 0 = not connected, 1 = in Station, 2 = charging
    int16_t mowCurrent;
    int16_t mowSpeed;
    int16_t mowPower;

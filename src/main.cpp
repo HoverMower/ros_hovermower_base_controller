@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
     while (ros::ok()) {
 
-        controler.read();
+        controller.read();
         rate.sleep();
     }
 

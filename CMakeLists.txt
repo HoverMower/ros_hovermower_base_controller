@@ -106,7 +106,6 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES rosmower_perimeter
    CATKIN_DEPENDS roscpp rosmower_msgs
 #  DEPENDS system_lib
 #   CATKIN_DEPENDS message_runtime
@@ -120,6 +119,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
+  include/ros_hovermower_base_controller
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -150,7 +150,7 @@ add_executable(${PROJECT_NAME}
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(hovermower_base_controller ${PROJECT_NAME}_gencfg)
+add_dependencies(ros_hovermower_base_controller ${PROJECT_NAME}_gencfg)
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}
    ${catkin_LIBRARIES}

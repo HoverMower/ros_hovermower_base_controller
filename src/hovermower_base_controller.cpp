@@ -22,7 +22,7 @@ HoverMowerBaseController::HoverMowerBaseController()
     // Prepare serial port
     if ((port_fd = open(PORT, O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
     {
-        ROS_FATAL("Cannot open serial port to perimeter receiver");
+        ROS_FATAL("Cannot open serial port to hovermower base controller");
         exit(-1);
     }
 
@@ -44,7 +44,7 @@ HoverMowerBaseController::HoverMowerBaseController()
     tcflush(port_fd, TCIFLUSH);
     tcsetattr(port_fd, TCSANOW, &options);
 
-    param_reconfig_callback_ = boost::bind(&Perimeter::dyn_callback, this, _1, _2);
+    param_reconfig_callback_ = boost::bind(&HoverMowerBaseController::dyn_callback, this, _1, _2);
 
     param_reconfig_server_.reset(new DynamicReconfigServer());
     param_reconfig_server_->setCallback(param_reconfig_callback_);
@@ -177,14 +177,14 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
         }
         else
         {
-            ROS_WARN("Perimeter checksum mismatch: %d vs %d", msg.checksum, checksum);
+            ROS_WARN("Base Controller checksum mismatch: %d vs %d", msg.checksum, checksum);
         }
         msg_len = 0;
     }
     prev_byte = byte;
 }
 
-void HoverMowerBaseController::dyn_callback(hovermower_base_controller::HoverMowerBaseController &config, uint32_t level)
+void HoverMowerBaseController::dyn_callback(ros_hovermower_base_controller::HoverMowerBaseControllerConfig &config, uint32_t level)
 {
     ROS_INFO("Reconfigure Request: timeout_smag: %i timeout: %i ",
              config.peri_timeout_below_smag,
