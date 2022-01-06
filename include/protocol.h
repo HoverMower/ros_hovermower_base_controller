@@ -40,10 +40,10 @@ typedef struct
    int16_t chgVoltage;
    int16_t chgCurrent; // 24 bytes
    unsigned char chgStatus;     // 0 = not connected, 1 = in Station, 2 = charging
+   bool mowAlarm;     //32 bytes */
    int16_t mowCurrent;
    int16_t mowSpeed;
    int16_t mowPower;
-   bool mowAlarm;     //32 bytes
    uint16_t checksum; // 34 bytes
 } SerialFeedback;
 #endif

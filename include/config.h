@@ -8,3 +8,7 @@
 
 // are Bump sensors attached?
 #define BUMPER true
+
+// mow motor attached?
+#define MOW true
+

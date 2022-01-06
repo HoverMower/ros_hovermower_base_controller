@@ -5,6 +5,8 @@
 #include "protocol.h"
 #include "rosmower_msgs/PerimeterMsg.h"
 #include "rosmower_msgs/Bumper.h"
+#include "rosmower_msgs/Battery.h"
+#include "rosmower_msgs/MowMotor.h"
 #include "std_msgs/Int32.h"
 #include <dynamic_reconfigure/server.h>
 #include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.h>
@@ -27,6 +29,8 @@ private:
     ros::Publisher peri_pub;
     ros::Publisher button_pub;
     ros::Publisher bumper_pub;
+    ros::Publisher mow_pub;
+    ros::Publisher battery_pub;
 
     ros::Time last_read;
 

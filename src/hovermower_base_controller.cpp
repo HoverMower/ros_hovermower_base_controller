@@ -18,6 +18,11 @@ HoverMowerBaseController::HoverMowerBaseController()
     {
         bumper_pub = nh.advertise<rosmower_msgs::Bumper>("sensors/Bumper", 3);
     }
+    if (MOW)
+    {
+        mow_pub = nh.advertise<rosmower_msgs::MowMotor>("sensors/MowMotor", 3);
+    }
+    battery_pub = nh.advertise<rosmower_msgs::Battery>("sensors/Battery", 3);
 
     // Prepare serial port
     if ((port_fd = open(PORT, O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
@@ -48,9 +53,9 @@ HoverMowerBaseController::HoverMowerBaseController()
 
     param_reconfig_server_.reset(new DynamicReconfigServer());
     param_reconfig_server_->setCallback(param_reconfig_callback_);
-    ROS_INFO_NAMED("perimeter", "Initialized dynamic reconfigure");
-    ROS_INFO_NAMED("perimeter", "Timeout smag % i", peri_timeout_smag_);
-    ROS_INFO_NAMED("perimeter", "Timeout % i", peri_timeout_);
+    ROS_INFO_NAMED("base controller", "Initialized dynamic reconfigure");
+    ROS_INFO_NAMED("base controller", "Timeout smag % i", peri_timeout_smag_);
+    ROS_INFO_NAMED("base controller", "Timeout % i", peri_timeout_);
 }
 
 HoverMowerBaseController::~HoverMowerBaseController()
@@ -103,8 +108,7 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
 
     if (msg_len == sizeof(SerialFeedback))
     {
-
-        uint16_t checksum = (uint16_t)(msg.start ^
+                uint16_t checksum = (uint16_t)(msg.start ^
                                        msg.left_mag ^
                                        msg.right_mag ^
                                        msg.left_smag ^
@@ -116,7 +120,15 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                                        msg.bumperLeft ^
                                        msg.bumperRight ^
                                        msg.buttonCount ^
-                                       msg.calibrated);
+                                       msg.calibrated ^
+                                       msg.batVoltage ^
+                                       msg.chgVoltage ^
+                                       msg.chgCurrent ^ 
+                                       msg.chgStatus ^ 
+                                       msg.mowCurrent ^
+                                       msg.mowPower ^ 
+                                       msg.mowSpeed ^
+                                       msg.mowAlarm);
 
         if (msg.start == START_FRAME && msg.checksum == checksum)
         {
@@ -160,6 +172,15 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
             // Publish perimeter message
             peri_pub.publish(peri);
 
+            // Battery message
+            rosmower_msgs::Battery battery;
+            battery.battery_voltage = (float)msg.batVoltage / 100;
+            battery.charge_voltage = (float)msg.chgVoltage / 100;
+            battery.charge_current = (float)msg.chgCurrent / 100;
+            battery.charge_status = msg.chgStatus;
+            battery_pub.publish(battery);
+
+            // publish additional sensor data
             if (BUMPER)
             {
                 rosmower_msgs::Bumper bumper;
@@ -173,6 +194,15 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                 std_msgs::Int32 button;
                 button.data = msg.buttonCount;
                 button_pub.publish(button);
+            }
+            if (MOW)
+            {
+                rosmower_msgs::MowMotor mow;
+                mow.current = (float)msg.mowCurrent / 100.0;
+                mow.power = (float)msg.mowPower / 100.0;
+                mow.speed =msg.mowSpeed;
+                mow.alarm = msg.mowAlarm;
+                mow_pub.publish(mow);
             }
         }
         else
