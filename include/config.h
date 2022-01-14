@@ -11,4 +11,5 @@
 
 // mow motor attached?
 #define MOW true
+#define MOW_MAX_SPEED 4000 // max RPM of mow motor
 

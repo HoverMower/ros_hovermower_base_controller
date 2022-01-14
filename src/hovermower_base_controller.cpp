@@ -24,6 +24,11 @@ HoverMowerBaseController::HoverMowerBaseController()
     }
     battery_pub = nh.advertise<rosmower_msgs::Battery>("sensors/Battery", 3);
 
+    // register Services
+    mow_service = nh.advertiseService("setMowMotorSpeed", &HoverMowerBaseController::setMowMotorSpeed, this);
+    calibration_service = nh.advertiseService("doCalibration", &HoverMowerBaseController::RequestCalibration, this);
+    setSwitch_service = nh.advertiseService("setSwitch", &HoverMowerBaseController::setSwitch, this);
+
     // Prepare serial port
     if ((port_fd = open(PORT, O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
     {
@@ -108,7 +113,7 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
 
     if (msg_len == sizeof(SerialFeedback))
     {
-                uint16_t checksum = (uint16_t)(msg.start ^
+        uint16_t checksum = (uint16_t)(msg.start ^
                                        msg.left_mag ^
                                        msg.right_mag ^
                                        msg.left_smag ^
@@ -123,12 +128,16 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                                        msg.calibrated ^
                                        msg.batVoltage ^
                                        msg.chgVoltage ^
-                                       msg.chgCurrent ^ 
-                                       msg.chgStatus ^ 
+                                       msg.chgCurrent ^
+                                       msg.chgStatus ^
                                        msg.mowCurrent ^
-                                       msg.mowPower ^ 
+                                       msg.mowPower ^
                                        msg.mowSpeed ^
-                                       msg.mowAlarm);
+                                       msg.mowAlarm ^
+                                       msg.switch1 ^
+                                       msg.switch2 ^
+                                       msg.switch3 ^
+                                       msg.calibrate);
 
         if (msg.start == START_FRAME && msg.checksum == checksum)
         {
@@ -200,7 +209,7 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                 rosmower_msgs::MowMotor mow;
                 mow.current = (float)msg.mowCurrent / 100.0;
                 mow.power = (float)msg.mowPower / 100.0;
-                mow.speed =msg.mowSpeed;
+                mow.speed = msg.mowSpeed;
                 mow.alarm = msg.mowAlarm;
                 mow_pub.publish(mow);
             }
@@ -222,4 +231,92 @@ void HoverMowerBaseController::dyn_callback(ros_hovermower_base_controller::Hove
 
     peri_timeout_smag_ = config.peri_timeout_below_smag;
     peri_timeout_ = config.peri_timeout;
+}
+
+bool HoverMowerBaseController::setMowMotorSpeed(rosmower_msgs::setMowMotor::Request &req,
+                                                rosmower_msgs::setMowMotor::Response &resp)
+{
+    if (!MOW || req.Speed > MOW_MAX_SPEED)
+    {
+        resp.Success = false;
+        return false;
+    }
+
+    if (req.Speed <= 0)
+    {
+        mow_target_speed_ = 0;
+    }
+    else
+    {
+        mow_target_speed_ = (uint16_t)req.Speed;
+    }
+    resp.Success = true;
+    ROS_INFO("set Speed to %i", mow_target_speed_);
+    return true;
+}
+
+bool HoverMowerBaseController::RequestCalibration(rosmower_msgs::doCalibration::Request &req,
+                                                  rosmower_msgs::doCalibration::Response &resp)
+{
+    doCalibration = req.calibrate;
+    return true;
+}
+
+bool HoverMowerBaseController::setSwitch(rosmower_msgs::setSwitch::Request &req,
+                                         rosmower_msgs::setSwitch::Response &resp)
+{
+    switch (req.switch_id)
+    {
+    case 1:
+        switch1 = req.value;
+        return true;
+        break;
+
+    case 2:
+        switch2 = req.value;
+        return true;
+        break;
+
+    case 3:
+        switch3 = req.value;
+        return true;
+        break;
+
+    default:
+        return false;
+        break;
+    }
+    return true;
+}
+
+void HoverMowerBaseController::write()
+{
+    if (port_fd == -1)
+    {
+        ROS_ERROR("Attempt to write on closed serial");
+        return;
+    }
+
+    // maybe do some accelleration to slow spped up mow motor
+
+    SerialCommand command;
+    command.start = (uint16_t)CMD_FRAME;
+    command.mow_rpm = (uint16_t)mow_target_speed_;
+    command.switch1 = (uint8_t)switch1;
+    command.switch2 = (uint8_t)switch2;
+    command.switch3 = (uint8_t)switch3;
+    command.calibrate = doCalibration;
+    command.checksum = (uint16_t)(command.start ^ command.mow_rpm ^
+                                  command.switch1 ^ command.switch2 ^ command.switch3 ^ command.calibrate);
+
+    int rc = ::write(port_fd, (const void *)&command, sizeof(command));
+    if (rc < 0)
+    {
+        ROS_ERROR("Error writing to hoverboard serial port");
+    }
+
+    if (doCalibration == true)
+    {
+        doCalibration = false;
+    }
 }
