@@ -28,6 +28,7 @@ HoverMowerBaseController::HoverMowerBaseController()
     mow_service = nh.advertiseService("setMowMotorSpeed", &HoverMowerBaseController::setMowMotorSpeed, this);
     calibration_service = nh.advertiseService("doCalibration", &HoverMowerBaseController::RequestCalibration, this);
     setSwitch_service = nh.advertiseService("setSwitch", &HoverMowerBaseController::setSwitch, this);
+    pressSwitch_service = nh.advertiseService("pressSwitch", &HoverMowerBaseController::pressSwitch, this);
 
     // Prepare serial port
     if ((port_fd = open(PORT, O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
@@ -269,23 +270,48 @@ bool HoverMowerBaseController::setSwitch(rosmower_msgs::setSwitch::Request &req,
     {
     case 1:
         switch1 = req.value;
-        return true;
         break;
 
     case 2:
         switch2 = req.value;
-        return true;
         break;
 
     case 3:
         switch3 = req.value;
-        return true;
         break;
 
     default:
         return false;
         break;
     }
+    return true;
+}
+
+bool HoverMowerBaseController::pressSwitch(rosmower_msgs::pressSwitch::Request &req,
+                                           rosmower_msgs::pressSwitch::Response &resp)
+{
+    switch (req.switch_id)
+    {
+    case 1:
+        switch1 = 255;
+        switch1_pressed_ = true;
+        break;
+
+    case 2:
+        switch2 = 255;
+        switch2_pressed_ = true;
+        break;
+
+    case 3:
+        switch3 = 255;
+        switch3_pressed_ = true;
+        break;
+
+    default:
+        return false;
+        break;
+    }
+
     return true;
 }
 
@@ -318,5 +344,25 @@ void HoverMowerBaseController::write()
     if (doCalibration == true)
     {
         doCalibration = false;
+    }
+
+    // if a switch should be pressed for short period only,
+    // reset the value back to 0
+    if (switch1_pressed_ == true)
+    {
+        switch1 = 0;
+        switch1_pressed_ = false;
+    }
+
+    if (switch2_pressed_ == true)
+    {
+        switch2 = 0;
+        switch2_pressed_ = false;
+    }
+
+    if (switch3_pressed_ == true)
+    {
+        switch3 = 0;
+        switch3_pressed_ = false;
     }
 }

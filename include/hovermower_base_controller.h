@@ -10,6 +10,7 @@
 #include "rosmower_msgs/setMowMotor.h"
 #include "rosmower_msgs/doCalibration.h"
 #include "rosmower_msgs/setSwitch.h"
+#include "rosmower_msgs/pressSwitch.h"
 #include "std_msgs/Int32.h"
 #include <dynamic_reconfigure/server.h>
 #include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.h>
@@ -35,6 +36,8 @@ private:
 
     bool setSwitch(rosmower_msgs::setSwitch::Request &req,
                           rosmower_msgs::setSwitch::Response &resp );
+    bool pressSwitch(rosmower_msgs::pressSwitch::Request &req,
+                          rosmower_msgs::pressSwitch::Response &resp );                          
     // Publishers
     ros::NodeHandle nh;
     ros::Publisher peri_pub;
@@ -47,6 +50,7 @@ private:
     ros::ServiceServer mow_service;
     ros::ServiceServer calibration_service;
     ros::ServiceServer setSwitch_service;
+    ros::ServiceServer pressSwitch_service;
 
     ros::Time last_read;
 
@@ -74,6 +78,10 @@ private:
     uint8_t switch1 = 0;
     uint8_t switch2 = 0;
     uint8_t switch3 = 0;
+    bool switch1_pressed_ = false;
+    bool switch2_pressed_ = false;
+    bool switch3_pressed_ = false;
+
 
     // dynamic reconfigure
     typedef dynamic_reconfigure::Server<ros_hovermower_base_controller::HoverMowerBaseControllerConfig> DynamicReconfigServer;
