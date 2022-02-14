@@ -9,7 +9,7 @@ HoverMowerBaseController::HoverMowerBaseController()
 {
 
     // Register  publisher
-    peri_pub = nh.advertise<rosmower_msgs::PerimeterMsg>("sensors/perimeter", 3);
+    peri_pub = nh.advertise<rosmower_msgs::PerimeterMsg>("sensors/Perimeter", 3);
     if (BUTTON)
     {
         button_pub = nh.advertise<std_msgs::Int32>("sensors/Button", 3);
