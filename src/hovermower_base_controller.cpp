@@ -9,26 +9,27 @@ HoverMowerBaseController::HoverMowerBaseController()
 {
 
     // Register  publisher
-    peri_pub = nh.advertise<rosmower_msgs::PerimeterMsg>("sensors/Perimeter", 3);
+    peri_pub = nh.advertise<rosmower_msgs::PerimeterMsg>("hovermower/sensors/Perimeter", 3);
     if (BUTTON)
     {
-        button_pub = nh.advertise<std_msgs::Int32>("sensors/Button", 3);
+        button_pub = nh.advertise<std_msgs::Int32>("hovermower/sensors/Button", 3);
     }
     if (BUMPER)
     {
-        bumper_pub = nh.advertise<rosmower_msgs::Bumper>("sensors/Bumper", 3);
+        bumper_pub = nh.advertise<rosmower_msgs::Bumper>("hovermower/sensors/Bumper", 3);
     }
     if (MOW)
     {
-        mow_pub = nh.advertise<rosmower_msgs::MowMotor>("sensors/MowMotor", 3);
+        mow_pub = nh.advertise<rosmower_msgs::MowMotor>("hovermower/sensors/MowMotor", 3);
     }
-    battery_pub = nh.advertise<rosmower_msgs::Battery>("sensors/Battery", 3);
+    battery_pub = nh.advertise<rosmower_msgs::Battery>("hovermower/sensors/Battery", 3);
+    switches_pub = nh.advertise<rosmower_msgs::Switches>("hovermower/switches", 3);
 
     // register Services
-    mow_service = nh.advertiseService("setMowMotorSpeed", &HoverMowerBaseController::setMowMotorSpeed, this);
-    calibration_service = nh.advertiseService("doCalibration", &HoverMowerBaseController::RequestCalibration, this);
-    setSwitch_service = nh.advertiseService("setSwitch", &HoverMowerBaseController::setSwitch, this);
-    pressSwitch_service = nh.advertiseService("pressSwitch", &HoverMowerBaseController::pressSwitch, this);
+    mow_service = nh.advertiseService("hovermower/setMowMotorSpeed", &HoverMowerBaseController::setMowMotorSpeed, this);
+    calibration_service = nh.advertiseService("hovermower/doCalibration", &HoverMowerBaseController::RequestCalibration, this);
+    setSwitch_service = nh.advertiseService("hovermower/setSwitch", &HoverMowerBaseController::setSwitch, this);
+    pressSwitch_service = nh.advertiseService("hovermower/pressSwitch", &HoverMowerBaseController::pressSwitch, this);
 
     // Prepare serial port
     if ((port_fd = open(PORT, O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
@@ -214,6 +215,11 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                 mow.alarm = msg.mowAlarm;
                 mow_pub.publish(mow);
             }
+            rosmower_msgs::Switches switches;
+            switches.switch1 = msg.switch1;
+            switches.switch2 = msg.switch2;
+            switches.switch3 = msg.switch3;
+            switches_pub.publish(switches);
         }
         else
         {

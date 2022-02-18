@@ -7,6 +7,7 @@
 #include "rosmower_msgs/Bumper.h"
 #include "rosmower_msgs/Battery.h"
 #include "rosmower_msgs/MowMotor.h"
+#include "rosmower_msgs/Switches.h"
 #include "rosmower_msgs/setMowMotor.h"
 #include "rosmower_msgs/doCalibration.h"
 #include "rosmower_msgs/setSwitch.h"
@@ -45,6 +46,7 @@ private:
     ros::Publisher bumper_pub;
     ros::Publisher mow_pub;
     ros::Publisher battery_pub;
+    ros::Publisher switches_pub;
 
     // Services
     ros::ServiceServer mow_service;
