@@ -15,6 +15,7 @@
 #include "std_msgs/Int32.h"
 #include <dynamic_reconfigure/server.h>
 #include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.h>
+#include <sensor_msgs/PointCloud2.h>
 
 class HoverMowerBaseController
 {
@@ -26,19 +27,18 @@ public:
     void write();
     void dyn_callback(ros_hovermower_base_controller::HoverMowerBaseControllerConfig &config, uint32_t level);
 
-
 private:
     void protocol_recv(unsigned char c);
     bool setMowMotorSpeed(rosmower_msgs::setMowMotor::Request &req,
-                          rosmower_msgs::setMowMotor::Response &resp );
-    
+                          rosmower_msgs::setMowMotor::Response &resp);
+
     bool RequestCalibration(rosmower_msgs::doCalibration::Request &req,
-                          rosmower_msgs::doCalibration::Response &resp );
+                            rosmower_msgs::doCalibration::Response &resp);
 
     bool setSwitch(rosmower_msgs::setSwitch::Request &req,
-                          rosmower_msgs::setSwitch::Response &resp );
+                   rosmower_msgs::setSwitch::Response &resp);
     bool pressSwitch(rosmower_msgs::pressSwitch::Request &req,
-                          rosmower_msgs::pressSwitch::Response &resp );                          
+                     rosmower_msgs::pressSwitch::Response &resp);
     // Publishers
     ros::NodeHandle nh;
     ros::Publisher peri_pub;
@@ -47,6 +47,7 @@ private:
     ros::Publisher mow_pub;
     ros::Publisher battery_pub;
     ros::Publisher switches_pub;
+    ros::Publisher bumper_pointcloud_pub;
 
     // Services
     ros::ServiceServer mow_service;
@@ -70,7 +71,25 @@ private:
     ros::Time lastTime_left_inside_;
     ros::Time lastTime_right_inside_;
 
-    //mow motor attribures
+    // additional bumper attributes
+    std::string bumper_left_frame_;
+    std::string bumper_right_frame_;
+    float bumper_pc_radius_;
+    float bumper_pc_height_;
+    float bumper_pc_angle_;
+    float p_side_x_;
+    float p_side_y_;
+    float n_side_y_;
+    //double r, h;
+    bool prev_bump_left_;
+
+    const float P_INF_X = +100 * sin(0.34906585); // somewhere out of reach from the robot (positive x)
+    const float P_INF_Y = +100 * cos(0.34906585); // somewhere out of reach from the robot (positive y)
+    const float N_INF_Y = -100 * cos(0.34906585);
+
+    sensor_msgs::PointCloud2 bumper_left_pc_;
+
+    // mow motor attribures
     uint16_t mow_target_speed_ = 0; // target speed of mow motor
 
     // calibration requested?
@@ -83,7 +102,6 @@ private:
     bool switch1_pressed_ = false;
     bool switch2_pressed_ = false;
     bool switch3_pressed_ = false;
-
 
     // dynamic reconfigure
     typedef dynamic_reconfigure::Server<ros_hovermower_base_controller::HoverMowerBaseControllerConfig> DynamicReconfigServer;

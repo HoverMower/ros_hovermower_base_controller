@@ -8,6 +8,7 @@
 
 // are Bump sensors attached?
 #define BUMPER true
+#define BUMPER_SWAP_LR true  //swap left and right bumper
 
 // mow motor attached?
 #define MOW true
