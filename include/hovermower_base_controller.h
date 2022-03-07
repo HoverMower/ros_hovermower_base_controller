@@ -15,7 +15,6 @@
 #include "std_msgs/Int32.h"
 #include <dynamic_reconfigure/server.h>
 #include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.h>
-#include <sensor_msgs/PointCloud2.h>
 
 class HoverMowerBaseController
 {
@@ -70,24 +69,6 @@ private:
     int peri_timeout_;      // timeout if one coil is not inside peri loop
     ros::Time lastTime_left_inside_;
     ros::Time lastTime_right_inside_;
-
-    // additional bumper attributes
-    std::string bumper_left_frame_;
-    std::string bumper_right_frame_;
-    float bumper_pc_radius_;
-    float bumper_pc_height_;
-    float bumper_pc_angle_;
-    float p_side_x_;
-    float p_side_y_;
-    float n_side_y_;
-    //double r, h;
-    bool prev_bump_left_;
-
-    const float P_INF_X = +100 * sin(0.34906585); // somewhere out of reach from the robot (positive x)
-    const float P_INF_Y = +100 * cos(0.34906585); // somewhere out of reach from the robot (positive y)
-    const float N_INF_Y = -100 * cos(0.34906585);
-
-    sensor_msgs::PointCloud2 bumper_left_pc_;
 
     // mow motor attribures
     uint16_t mow_target_speed_ = 0; // target speed of mow motor

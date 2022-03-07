@@ -16,45 +16,7 @@ HoverMowerBaseController::HoverMowerBaseController()
     }
     if (BUMPER)
     {
-        nh.param<std::string>("bumper_left_frame", bumper_left_frame_, "bumper_left");
-        nh.param<std::string>("bumper_right_frame", bumper_right_frame_, "bumper_right");
         bumper_pub = nh.advertise<rosmower_msgs::Bumper>("hovermower/sensors/Bumper", 3);
-        bumper_pointcloud_pub = nh.advertise<sensor_msgs::PointCloud2>("hovermower/sensors/Bumper_pointcloud", 10);
-        // Lateral points x/y coordinates; we need to store float values to memcopy later
-        p_side_x_ = +bumper_pc_radius_ * sin(bumper_pc_angle_); // angle degrees from vertical
-                                                                // p_side_y_ = +pc_radius_ * cos(bumper_pc_angle); // angle degrees from vertical
-                                                                // n_side_y_ = -pc_radius_ * cos(bumper_pc_angle); // angle degrees from vertical
-
-        // Prepare constant parts of the pointcloud message to be  published
-        bumper_left_pc_.header.frame_id = bumper_left_frame_;
-        bumper_left_pc_.width = 3;
-        bumper_left_pc_.height = 1;
-        bumper_left_pc_.fields.resize(3);
-
-        // Set x/y/z as the only fields
-        bumper_left_pc_.fields[0].name = "x";
-        bumper_left_pc_.fields[1].name = "y";
-        bumper_left_pc_.fields[2].name = "z";
-
-        int offset = 0;
-
-        // All offsets are *4, as all field data types are float32
-        for (size_t d = 0; d < bumper_left_pc_.fields.size(); ++d, offset += 4)
-        {
-            bumper_left_pc_.fields[d].count = 1;
-            bumper_left_pc_.fields[d].offset = offset;
-            bumper_left_pc_.fields[d].datatype = sensor_msgs::PointField::FLOAT32;
-        }
-
-        bumper_left_pc_.point_step = offset;
-        bumper_left_pc_.row_step = bumper_left_pc_.point_step * bumper_left_pc_.width;
-
-        bumper_left_pc_.data.resize(3 * bumper_left_pc_.point_step);
-        bumper_left_pc_.is_bigendian = false;
-        bumper_left_pc_.is_dense = true;
-
-        // z: constant elevation from base frame
-        memcpy(&bumper_left_pc_.data[0 * bumper_left_pc_.point_step + bumper_left_pc_.fields[2].offset], &bumper_pc_height_, sizeof(float));
     }
 
     if (MOW)
@@ -247,25 +209,6 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
 
                 bumper_pub.publish(bumper);
 
-                if (bumper.left)
-                {
-                    memcpy(&bumper_left_pc_.data[0 * bumper_left_pc_.point_step + bumper_left_pc_.fields[0].offset], &p_side_x_, sizeof(float));
-                    memcpy(&bumper_left_pc_.data[0 * bumper_left_pc_.point_step + bumper_left_pc_.fields[1].offset], &p_side_y_, sizeof(float));
-                }
-                else
-                {
-                    memcpy(&bumper_left_pc_.data[0 * bumper_left_pc_.point_step + bumper_left_pc_.fields[0].offset], &P_INF_X, sizeof(float));
-                    memcpy(&bumper_left_pc_.data[0 * bumper_left_pc_.point_step + bumper_left_pc_.fields[1].offset], &P_INF_Y, sizeof(float));
-                }
-
-                bumper_left_pc_.header.stamp = ros::Time::now();
-
-                if (bumper.left != prev_bump_left_)
-                {
-                    bumper_pointcloud_pub.publish(bumper_left_pc_);
-                }
-
-                prev_bump_left_ = bumper.left;
             }
             if (BUTTON)
             {
@@ -305,9 +248,6 @@ void HoverMowerBaseController::dyn_callback(ros_hovermower_base_controller::Hove
 
     peri_timeout_smag_ = config.peri_timeout_below_smag;
     peri_timeout_ = config.peri_timeout;
-    bumper_pc_angle_ = config.bumper_pc_angle;
-    bumper_pc_height_ = config.bumper_pc_height;
-    bumper_pc_radius_ = config.bumper_pc_radius;
 }
 
 bool HoverMowerBaseController::setMowMotorSpeed(rosmower_msgs::setMowMotor::Request &req,

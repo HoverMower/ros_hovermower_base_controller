@@ -12,6 +12,12 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   rosmower_msgs
   dynamic_reconfigure
+  nodelet
+  pluginlib
+  sensor_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -106,7 +112,8 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-   CATKIN_DEPENDS roscpp rosmower_msgs
+   LIBRARIES ros_hovermower_base_controller_nodelet
+   CATKIN_DEPENDS roscpp rosmower_msgs nodelet pluginlib 
 #  DEPENDS system_lib
 #   CATKIN_DEPENDS message_runtime
 )
@@ -124,6 +131,10 @@ include_directories(
 )
 
 ## Declare a C++ library
+ add_library(ros_hovermower_base_controller_nodelet
+   src/hovermower_bumper2pc.cpp
+ )
+target_link_libraries(ros_hovermower_base_controller_nodelet ${catkin_LIBRARIES})
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/rosmower_perimeter.cpp
 # )
@@ -138,6 +149,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}
  src/hovermower_base_controller.cpp
+# src/hovermower_bumper2pc.cpp
  src/main.cpp
  )
 
