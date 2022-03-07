@@ -53,6 +53,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.h>
 #include "rosmower_msgs/Bumper.h"
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
 
 /*****************************************************************************
  ** Namespace
@@ -89,6 +91,7 @@ namespace ros_hovermower_base_controller
         // additional bumper attributes
         std::string bumper_left_frame_;
         std::string bumper_right_frame_;
+        std::string base_frame_;
 
         float pc_radius_;
         float pc_height_;
@@ -96,19 +99,27 @@ namespace ros_hovermower_base_controller
         float p_side_x_;
         float p_side_y_;
         float n_side_y_;
+        float distance_x_;
+        float distance_y_;
 
-        ros::Publisher bumper_left_pc_pub_;
-        ros::Publisher bumper_right_pc_pub_;
+        // tf transformation between base_frame and bumper frames
+        float bumper_frame_left_x = 0.0;
+        float bumper_frame_left_y = 0.0;
+        float bumper_frame_right_x = 0.0;
+        float bumper_frame_right_y = 0.0;
+        tf2_ros::Buffer tfBuffer;   
+
+        ros::Publisher bumper_pc_pub_;
         ros::Subscriber base_controller_bumper_sub_;
 
-        sensor_msgs::PointCloud2 bumper_left_pc_;
-        sensor_msgs::PointCloud2 bumper_right_pc_;
+        sensor_msgs::PointCloud2 bumper_pc_;
 
         /**
          * @brief Core sensors state structure callback
          * @param msg incoming topic message
          */
         void bc_bumperCB(const rosmower_msgs::Bumper::ConstPtr &msg);
+        void get_tf_bumper();
 
         // dynamic reconfigure
         typedef dynamic_reconfigure::Server<ros_hovermower_base_controller::HoverMowerBaseControllerConfig> DynamicReconfigServer;
