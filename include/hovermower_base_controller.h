@@ -15,6 +15,7 @@
 #include "std_msgs/Int32.h"
 #include <dynamic_reconfigure/server.h>
 #include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.h>
+#include <string>
 
 class HoverMowerBaseController
 {
@@ -58,6 +59,7 @@ private:
 
     // base controller protocol
     int port_fd;
+    std::string port;
     int msg_len = 0;
     unsigned char prev_byte = 0;
     uint16_t start_frame = 0;

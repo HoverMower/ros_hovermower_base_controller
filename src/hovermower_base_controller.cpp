@@ -1,6 +1,7 @@
 #include "hovermower_base_controller.h"
 #include "config.h"
 #include "protocol.h"
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 #include <fcntl.h>
 #include <termios.h>
@@ -32,8 +33,14 @@ HoverMowerBaseController::HoverMowerBaseController()
     setSwitch_service = nh.advertiseService("hovermower/setSwitch", &HoverMowerBaseController::setSwitch, this);
     pressSwitch_service = nh.advertiseService("hovermower/pressSwitch", &HoverMowerBaseController::pressSwitch, this);
 
+    if (!rosparam_shortcuts::get("base_controller", nh, "base_controller/port", port)) {
+        port = DEFAULT_PORT;
+        ROS_WARN("Hovermower Port is not set in config, using default %s", port.c_str());
+    } else {
+        ROS_INFO("Using port %s", port.c_str());
+    }
     // Prepare serial port
-    if ((port_fd = open(PORT, O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
+    if ((port_fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY)) < 0)
     {
         ROS_FATAL("Cannot open serial port to hovermower base controller");
         exit(-1);
@@ -86,12 +93,12 @@ void HoverMowerBaseController::read()
             last_read = ros::Time::now();
 
         if (r < 0 && errno != EAGAIN)
-            ROS_ERROR("Reading from serial %s failed: %d", PORT, r);
+            ROS_ERROR("Reading from serial %s failed: %d", port.c_str(), r);
     }
 
     if ((ros::Time::now() - last_read).toSec() > 1)
     {
-        ROS_FATAL("Timeout reading from serial %s failed", PORT);
+        ROS_FATAL("Timeout reading from serial %s failed", port.c_str());
     }
 }
 
