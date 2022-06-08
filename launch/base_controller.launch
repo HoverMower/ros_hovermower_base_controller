@@ -1,11 +1,11 @@
 <launch>
+    <arg name="device_port" default="/dev/ttyUSB0" />
 
- <node name="base_controller" pkg="ros_hovermower_base_controller" type="ros_hovermower_base_controller" output="screen" >
- </node>
+    <node name="base_controller" pkg="ros_hovermower_base_controller" type="ros_hovermower_base_controller" output="screen">
+        <param name="port" type="str" value="$(arg device_port)"/>
+    </node>
 
-
-    <node pkg="nodelet" type="nodelet" name="standalone_nodelet"  args="manager" output="screen"/>
-  
+    <node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager" output="screen"/>
     <node pkg="nodelet" type="nodelet" name="Bumper2PCNodelet" args="load ros_hovermower_base_controller/Bumper2PcNodelet standalone_nodelet" output="screen">
     </node>
 

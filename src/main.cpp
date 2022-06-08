@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "HoverMower_base_controller");
+    ros::init(argc, argv, "base_controller");
 
     HoverMowerBaseController controller;
 
