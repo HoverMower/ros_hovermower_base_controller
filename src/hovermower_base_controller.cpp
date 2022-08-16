@@ -33,10 +33,13 @@ HoverMowerBaseController::HoverMowerBaseController()
     setSwitch_service = nh.advertiseService("hovermower/setSwitch", &HoverMowerBaseController::setSwitch, this);
     pressSwitch_service = nh.advertiseService("hovermower/pressSwitch", &HoverMowerBaseController::pressSwitch, this);
 
-    if (!rosparam_shortcuts::get("base_controller", nh, "base_controller/port", port)) {
+    if (!rosparam_shortcuts::get("base_controller", nh, "base_controller/port", port))
+    {
         port = DEFAULT_PORT;
         ROS_WARN("Hovermower Port is not set in config, using default %s", port.c_str());
-    } else {
+    }
+    else
+    {
         ROS_INFO("Using port %s", port.c_str());
     }
     // Prepare serial port
@@ -215,7 +218,6 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                 }
 
                 bumper_pub.publish(bumper);
-
             }
             if (BUTTON)
             {
@@ -264,6 +266,12 @@ bool HoverMowerBaseController::setMowMotorSpeed(rosmower_msgs::setMowMotor::Requ
     {
         resp.Success = false;
         return false;
+    }
+
+    if (req.Speed == mow_target_speed_)
+    {
+        resp.Success = true;
+        return true;
     }
 
     if (req.Speed <= 0)
