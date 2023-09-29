@@ -14,14 +14,14 @@
 ** Includes
 *****************************************************************************/
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 
-#include "hovermower_bumper2pc.h"
+#include "hovermower_bumper2pc.hpp"
 
 namespace ros_hovermower_base_controller
 {
 
-    void Bumper2PcNodelet::bc_bumperCB(const rosmower_msgs::Bumper::ConstPtr &msg)
+    void Bumper2PcNodelet::bc_bumperCB(const rosmower_msgs::msg::Bumper::ConstPtr &msg)
     {
         if (bumper_pc_pub_.getNumSubscribers() == 0)
             return;
@@ -61,14 +61,14 @@ namespace ros_hovermower_base_controller
             memcpy(&bumper_pc_.data[1 * bumper_pc_.point_step + bumper_pc_.fields[1].offset], &P_INF_Y, sizeof(float));
         }
 
-        bumper_pc_.header.stamp = ros::Time::now();
+        bumper_pc_.header.stamp = rclcpp::Time::now();
 
         bumper_pc_pub_.publish(bumper_pc_);
     }
 
     void Bumper2PcNodelet::onInit()
     {
-        ros::NodeHandle nh = this->getPrivateNodeHandle();
+        rclcpp::Node nh = this->getPrivateNodeHandle();
 
         param_reconfig_callback_ = boost::bind(&Bumper2PcNodelet::dyn_callback, this, _1, _2);
 
@@ -114,7 +114,7 @@ namespace ros_hovermower_base_controller
         {
             bumper_pc_.fields[d].count = 1;
             bumper_pc_.fields[d].offset = offset;
-            bumper_pc_.fields[d].datatype = sensor_msgs::PointField::FLOAT32;
+            bumper_pc_.fields[d].datatype = sensor_msgs::msg::PointField::FLOAT32;
         }
 
         bumper_pc_.point_step = offset;
@@ -129,12 +129,12 @@ namespace ros_hovermower_base_controller
         memcpy(&bumper_pc_.data[0 * bumper_pc_.point_step + bumper_pc_.fields[2].offset], &pc_height_, sizeof(float));
         memcpy(&bumper_pc_.data[1 * bumper_pc_.point_step + bumper_pc_.fields[2].offset], &pc_height_, sizeof(float));
 
-        bumper_pc_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/hovermower/sensors/Bumper_pointcloud", 10);
-        base_controller_bumper_sub_ = nh.subscribe("/hovermower/sensors/Bumper", 10, &Bumper2PcNodelet::bc_bumperCB, this);
+        bumper_pc_pub_ = nh->create_publisher<sensor_msgs::msg::PointCloud2>("/hovermower/sensors/Bumper_pointcloud", 10);
+        base_controller_bumper_sub_ = nnode->subscriber("/hovermower/sensors/Bumper", 10, &Bumper2PcNodelet::bc_bumperCB, this);
 
         // get tf between base_frame and bummper_frames
         get_tf_bumper();
-        ROS_INFO("Bumper pointcloud configured at distance %f and height %f from bumper frame", pc_radius_, pc_height_);
+        RCLCPP_INFO(node->get_logger(),"Bumper pointcloud configured at distance %f and height %f from bumper frame", pc_radius_, pc_height_);
     }
 
     // Get transformation between base_link and bumper frames to calculate point location
@@ -146,25 +146,25 @@ namespace ros_hovermower_base_controller
         try
         {
             transformStamped = tfBuffer.lookupTransform(base_frame_, bumper_left_frame_,
-                                                        ros::Time(0), ros::Duration(3.0));
+                                                        rclcpp::Time(0), rclcpp::Duration(3.0));
             bumper_frame_left_x = transformStamped.transform.translation.x;
             bumper_frame_left_y = transformStamped.transform.translation.y;
         }
         catch (tf2::TransformException &ex)
         {
-            ROS_WARN("%s", ex.what());
+            RCLCPP_ERROR(node->get_logger(),"%s", ex.what());
         }
 
         try
         {
             transformStamped = tfBuffer.lookupTransform(base_frame_, bumper_right_frame_,
-                                                        ros::Time(0), ros::Duration(3.0));
+                                                        rclcpp::Time(0), rclcpp::Duration(3.0));
             bumper_frame_right_x = transformStamped.transform.translation.x;
             bumper_frame_right_y = transformStamped.transform.translation.y;
         }
         catch (tf2::TransformException &ex)
         {
-            ROS_WARN("%s", ex.what());
+            RCLCPP_ERROR(node->get_logger(),"%s", ex.what());
         } 
        
     }

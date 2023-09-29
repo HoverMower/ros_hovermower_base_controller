@@ -46,15 +46,15 @@
  ** Includes
  *****************************************************************************/
 
-#include <ros/ros.h>
-#include <nodelet/nodelet.h>
+#include <rclcpp/rclcpp.hpp>
+#include <nodelet/nodelet.hpp>
 
-#include <sensor_msgs/PointCloud2.h>
-#include <dynamic_reconfigure/server.h>
-#include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.h>
-#include "rosmower_msgs/Bumper.h"
-#include <tf2_ros/transform_listener.h>
-#include <geometry_msgs/TransformStamped.h>
+#include <sensor_msgs/msg/PointCloud2.hpp>
+#include <dynamic_reconfigure/server.hpp>
+#include <ros_hovermower_base_controller/HoverMowerBaseControllerConfig.hpp>
+#include "rosmower_msgs/msg/Bumper.hpp"
+#include <tf2_ros/transform_listener.hpp>
+#include <geometry_msgs/msg/TransformStamped.hpp>
 
 /*****************************************************************************
  ** Namespace
@@ -109,16 +109,16 @@ namespace ros_hovermower_base_controller
         float bumper_frame_right_y = 0.0;
         tf2_ros::Buffer tfBuffer;   
 
-        ros::Publisher bumper_pc_pub_;
-        ros::Subscriber base_controller_bumper_sub_;
+        rclcpp::Publisher bumper_pc_pub_;
+        rclcpp::Subscriber base_controller_bumper_sub_;
 
-        sensor_msgs::PointCloud2 bumper_pc_;
+        sensor_msgs::msg::PointCloud2 bumper_pc_;
 
         /**
          * @brief Core sensors state structure callback
          * @param msg incoming topic message
          */
-        void bc_bumperCB(const rosmower_msgs::Bumper::ConstPtr &msg);
+        void bc_bumperCB(const rosmower_msgs::msg::Bumper::ConstPtr &msg);
         void get_tf_bumper();
 
         // dynamic reconfigure

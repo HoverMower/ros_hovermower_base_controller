@@ -1,7 +1,0 @@
-<library path="lib/libros_hovermower_base_controller_nodelet">
-  <class name="ros_hovermower_base_controller/Bumper2PcNodelet" type="ros_hovermower_base_controller::Bumper2PcNodelet" base_class_type="nodelet::Nodelet">
-    <description>
-      Implementation for the bumper to pointcloud relay as a nodelet.
-    </description>
-  </class>
-</library>

@@ -1,28 +1,24 @@
-#include <ros/ros.h>
-#include "hovermower_base_controller.h"
+#include "hovermower_base_controller.hpp"
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "base_controller");
+    rclcpp::init(argc, argv);
 
-    HoverMowerBaseController controller;
+    auto controller = std::make_shared<HoverMowerBaseController>("base_controller");
 
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
-
-    ros::Rate rate(100.0);
+    rclcpp::Rate rate(20.0);
     int rate_counter = 0;
 
-    while (ros::ok())
+    while (rclcpp::ok())
     {
         rate_counter++;
-        controller.read();
+        controller->read();
         if (rate_counter > 9)
         {
-            controller.write(); // reduce this rate
+            controller->write(); // reduce this rate
             rate_counter = 0;
         }
-
+        rclcpp::spin_some(controller);
         rate.sleep();
     }
 

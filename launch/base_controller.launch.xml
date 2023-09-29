@@ -1,0 +1,9 @@
+<launch>
+    <arg name="device_port" default="/dev/ttyUSB0" />
+
+    <node name="base_controller" pkg="ros_hovermower_base_controller" exec="base_controller" output="screen">
+        <param name="port" type="str" value="$(var device_port)"/>
+    </node>
+
+    
+</launch>
