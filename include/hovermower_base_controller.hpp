@@ -14,15 +14,30 @@
 #include "rosmower_msgs/srv/press_switch.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include <string>
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
 
 class HoverMowerBaseController : public rclcpp::Node
 {
 public:
+    /**
+     * class constructor
+     *
+     * @param name name of the node
+     */
     HoverMowerBaseController(std::string name);
+
+    /**
+     * class destructor
+     *
+     */
     ~HoverMowerBaseController();
 
+    /// @brief read data from serial port
     void read();
     void write();
+
+    rcl_interfaces::msg::SetParametersResult parametersCallback(
+        const std::vector<rclcpp::Parameter> &parameters);
 
 private:
     void protocol_recv(unsigned char c);
@@ -36,8 +51,6 @@ private:
                    std::shared_ptr<rosmower_msgs::srv::SetSwitch::Response> resp);
     void pressSwitch(const std::shared_ptr<rosmower_msgs::srv::PressSwitch::Request> req,
                      std::shared_ptr<rosmower_msgs::srv::PressSwitch::Response> resp);
-
-    void timerCallback();
 
     // Publishers
     rclcpp::Publisher<rosmower_msgs::msg::Perimeter>::SharedPtr peri_pub;
@@ -54,8 +67,10 @@ private:
     rclcpp::Service<rosmower_msgs::srv::SetSwitch>::SharedPtr setSwitch_service;
     rclcpp::Service<rosmower_msgs::srv::PressSwitch>::SharedPtr pressSwitch_service;
 
-    rclcpp::Time last_read = get_clock()->now();;
-    rclcpp::Time last_valid_message = get_clock()->now();;
+    rclcpp::Time last_read = get_clock()->now();
+    ;
+    rclcpp::Time last_valid_message = get_clock()->now();
+    ;
 
     // base controller protocol
     int port_fd;
@@ -70,7 +85,7 @@ private:
     int peri_timeout_smag_; // timeout if smag below
     int peri_timeout_;      // timeout if one coil is not inside peri loop
     rclcpp::Time lastTime_left_inside_ = get_clock()->now();
-    rclcpp::Time lastTime_right_inside_= get_clock()->now();
+    rclcpp::Time lastTime_right_inside_ = get_clock()->now();
 
     // mow motor attribures
     uint16_t mow_target_speed_ = 0; // target speed of mow motor
@@ -86,8 +101,8 @@ private:
     bool switch2_pressed_ = false;
     bool switch3_pressed_ = false;
 
-    // Define a timer for periodic check
-    rclcpp::TimerBase::SharedPtr timer_;
+    // Parameter Callback handle
+    OnSetParametersCallbackHandle::SharedPtr callback_handle_;
 };
 
 #endif

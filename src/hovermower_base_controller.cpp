@@ -38,9 +38,9 @@ HoverMowerBaseController::HoverMowerBaseController(std::string name) : Node(name
 
      // register Services
      mow_service = create_service<rosmower_msgs::srv::SetMowMotor>("hovermower/setMowMotorSpeed", std::bind(&HoverMowerBaseController::setMowMotorSpeed, this, std::placeholders::_1, std::placeholders::_2));
-     // calibration_service = create_service<rosmower_msgs::srv::Calibration>("hovermower/doCalibration", std::bind(&HoverMowerBaseController::RequestCalibration, this,std::placeholders::_1, std::placeholders::_2));
-     // setSwitch_service = create_service<rosmower_msgs::srv::SetSwitch>("hovermower/setSwitch", std::bind(&HoverMowerBaseController::setSwitch, this,std::placeholders::_1, std::placeholders::_2));
-     // pressSwitch_service = create_service<rosmower_msgs::srv::PressSwitch>("hovermower/pressSwitch", std::bind(&HoverMowerBaseController::pressSwitch, this,std::placeholders::_1, std::placeholders::_2));
+     calibration_service = create_service<rosmower_msgs::srv::Calibration>("hovermower/doCalibration", std::bind(&HoverMowerBaseController::RequestCalibration, this,std::placeholders::_1, std::placeholders::_2));
+     setSwitch_service = create_service<rosmower_msgs::srv::SetSwitch>("hovermower/setSwitch", std::bind(&HoverMowerBaseController::setSwitch, this,std::placeholders::_1, std::placeholders::_2));
+     pressSwitch_service = create_service<rosmower_msgs::srv::PressSwitch>("hovermower/pressSwitch", std::bind(&HoverMowerBaseController::pressSwitch, this,std::placeholders::_1, std::placeholders::_2));
 
      RCLCPP_INFO(get_logger(), "Using port %s", port.c_str());
 
@@ -72,8 +72,9 @@ HoverMowerBaseController::HoverMowerBaseController(std::string name) : Node(name
      RCLCPP_INFO(get_logger(), "Timeout smag % i", peri_timeout_smag_);
      RCLCPP_INFO(get_logger(), "Timeout % i", peri_timeout_);
 
-     // Create a periodic timer of 1 second
-     //timer_ = create_wall_timer(std::chrono::milliseconds(1000), std::bind(&HoverMowerBaseController::timerCallback, this));
+     // register parameter change callback handle
+     callback_handle_ = this->add_on_set_parameters_callback(
+         std::bind(&HoverMowerBaseController::parametersCallback, this, std::placeholders::_1));
 }
 HoverMowerBaseController::~HoverMowerBaseController()
 {
@@ -132,6 +133,7 @@ void HoverMowerBaseController::write()
           switch3_pressed_ = false;
      }
 }
+
 void HoverMowerBaseController::read()
 {
      if (port_fd != -1)
@@ -149,12 +151,12 @@ void HoverMowerBaseController::read()
                RCLCPP_ERROR(get_logger(), "Reading from serial %s failed: %d", port.c_str(), r);
      }
 
-     if ((get_clock()->now().seconds() - last_read.seconds() ) > 1)
+     if ((get_clock()->now().seconds() - last_read.seconds()) > 1)
      {
           RCLCPP_FATAL(get_logger(), "Timeout reading from serial %s failed", port.c_str());
      }
 
-          if ((get_clock()->now() - last_valid_message ).seconds() > 2)
+     if ((get_clock()->now() - last_valid_message).seconds() > 2)
      {
           RCLCPP_FATAL(get_logger(), "Timeout reading valid message()");
      }
@@ -304,21 +306,6 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
      prev_byte = byte;
 }
 
-void HoverMowerBaseController::timerCallback()
-{
-     int last_peri_timeout_smag_ = 0; // timeout if smag below
-     int last_peri_timeout_ = 0;
-
-     get_parameter("peri_timeout_below_smag", peri_timeout_smag_);
-     get_parameter("peri_timeout", peri_timeout_);
-
-     if (last_peri_timeout_ != peri_timeout_)
-          RCLCPP_INFO(get_logger(), "Reconfigure Request:timeout: %i ", peri_timeout_);
-
-     if (last_peri_timeout_smag_ != peri_timeout_smag_)
-          RCLCPP_INFO(get_logger(), "Reconfigure Request:timeout smag: %i ", peri_timeout_smag_);
-}
-
 void HoverMowerBaseController::setMowMotorSpeed(const std::shared_ptr<rosmower_msgs::srv::SetMowMotor::Request> req,
                                                 std::shared_ptr<rosmower_msgs::srv::SetMowMotor::Response> resp)
 {
@@ -398,4 +385,28 @@ void HoverMowerBaseController::pressSwitch(const std::shared_ptr<rosmower_msgs::
      }
 
      return;
+}
+
+rcl_interfaces::msg::SetParametersResult HoverMowerBaseController::parametersCallback(
+    const std::vector<rclcpp::Parameter> &parameters)
+{
+     rcl_interfaces::msg::SetParametersResult result;
+     result.successful = true;
+     result.reason = "success";
+     // Here update class attributes, do some actions, etc.
+     for (const auto &param : parameters)
+     {
+          if (param.get_name() == "peri_timeout_below_smag")
+          {
+               peri_timeout_smag_ = param.as_int();
+               RCLCPP_INFO(get_logger(), "new value for perimeter timeout smag: %i", peri_timeout_smag_);
+          }
+          if (param.get_name() == "peri_timeout")
+          {
+               peri_timeout_ = param.as_int();
+               RCLCPP_INFO(get_logger(), "new value for perimeter timeout: %i", peri_timeout_);
+          }
+     }
+
+     return result;
 }
