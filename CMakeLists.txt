@@ -14,13 +14,11 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
-#find_package(nodelet REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-#find_package(rosparam_shortcuts REQUIRED)
 find_package(rosmower_msgs REQUIRED)
 
 
@@ -61,9 +59,6 @@ tf2
 tf2_ros
 tf2_geometry_msgs
 rosmower_msgs)
-
-
- 
 
 #target_link_libraries(ros_hovermower_base_controller_nodelet )
 ament_target_dependencies(base_controller rclcpp std_msgs

@@ -26,21 +26,22 @@ HoverMowerBaseController::HoverMowerBaseController(std::string name) : Node(name
      }
      if (BUMPER)
      {
-          bumper_pub = create_publisher<rosmower_msgs::msg::Bumper>("hovermower/sensors/Bumper", 3);
+          bumper_left_pub = create_publisher<std_msgs::msg::Bool>("hovermower/sensors/bumper/left", 3);
+          bumper_right_pub = create_publisher<std_msgs::msg::Bool>("hovermower/sensors/bumper/right", 3);
      }
 
      if (MOW)
      {
           mow_pub = create_publisher<rosmower_msgs::msg::MowMotor>("hovermower/sensors/MowMotor", 3);
      }
-     battery_pub = create_publisher<rosmower_msgs::msg::Battery>("hovermower/sensors/Battery", 3);
+     battery_pub = create_publisher<sensor_msgs::msg::BatteryState>("hovermower/sensors/Battery", 3);
      switches_pub = create_publisher<rosmower_msgs::msg::Switches>("hovermower/switches", 3);
 
      // register Services
      mow_service = create_service<rosmower_msgs::srv::SetMowMotor>("hovermower/setMowMotorSpeed", std::bind(&HoverMowerBaseController::setMowMotorSpeed, this, std::placeholders::_1, std::placeholders::_2));
-     calibration_service = create_service<rosmower_msgs::srv::Calibration>("hovermower/doCalibration", std::bind(&HoverMowerBaseController::RequestCalibration, this,std::placeholders::_1, std::placeholders::_2));
-     setSwitch_service = create_service<rosmower_msgs::srv::SetSwitch>("hovermower/setSwitch", std::bind(&HoverMowerBaseController::setSwitch, this,std::placeholders::_1, std::placeholders::_2));
-     pressSwitch_service = create_service<rosmower_msgs::srv::PressSwitch>("hovermower/pressSwitch", std::bind(&HoverMowerBaseController::pressSwitch, this,std::placeholders::_1, std::placeholders::_2));
+     calibration_service = create_service<rosmower_msgs::srv::Calibration>("hovermower/doCalibration", std::bind(&HoverMowerBaseController::RequestCalibration, this, std::placeholders::_1, std::placeholders::_2));
+     setSwitch_service = create_service<rosmower_msgs::srv::SetSwitch>("hovermower/setSwitch", std::bind(&HoverMowerBaseController::setSwitch, this, std::placeholders::_1, std::placeholders::_2));
+     pressSwitch_service = create_service<rosmower_msgs::srv::PressSwitch>("hovermower/pressSwitch", std::bind(&HoverMowerBaseController::pressSwitch, this, std::placeholders::_1, std::placeholders::_2));
 
      RCLCPP_INFO(get_logger(), "Using port %s", port.c_str());
 
@@ -252,29 +253,44 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                peri_pub->publish(peri);
 
                // Battery message
-               rosmower_msgs::msg::Battery battery;
-               battery.battery_voltage = (float)msg.batVoltage / 100;
-               battery.charge_voltage = (float)msg.chgVoltage / 100;
-               battery.charge_current = (float)msg.chgCurrent / 100;
-               battery.charge_status = msg.chgStatus;
+               sensor_msgs::msg::BatteryState battery;
+               battery.voltage = (float)msg.batVoltage / 100;
+               battery.current = (float)msg.chgCurrent / 100;
+               switch (msg.chgStatus)
+               {
+               case 0:
+                    battery.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;
+                    break;
+
+               case 1:
+                    battery.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_FULL;
+                    break;
+
+               case 2:
+                    battery.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_CHARGING;
+                    break;
+               }
+
                battery_pub->publish(battery);
 
                // publish additional sensor data
                if (BUMPER)
                {
-                    rosmower_msgs::msg::Bumper bumper;
+                    std_msgs::msg::Bool bumperleft;
+                    std_msgs::msg::Bool bumperright;
                     if (BUMPER_SWAP_LR)
                     {
-                         bumper.right = msg.bumperLeft;
-                         bumper.left = msg.bumperRight;
+                         bumperright.data = msg.bumperLeft;
+                         bumperleft.data = msg.bumperRight;
                     }
                     else
                     {
-                         bumper.left = msg.bumperLeft;
-                         bumper.right = msg.bumperRight;
+                         bumperleft.data = msg.bumperLeft;
+                         bumperright.data = msg.bumperRight;
                     }
 
-                    bumper_pub->publish(bumper);
+                    bumper_left_pub->publish(bumperleft);
+                    bumper_right_pub->publish(bumperright);
                }
                if (BUTTON)
                {

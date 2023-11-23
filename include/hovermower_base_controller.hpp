@@ -13,6 +13,8 @@
 #include "rosmower_msgs/srv/set_switch.hpp"
 #include "rosmower_msgs/srv/press_switch.hpp"
 #include "std_msgs/msg/int32.hpp"
+#include "std_msgs/msg/bool.hpp"
+#include "sensor_msgs/msg/battery_state.hpp"
 #include <string>
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
@@ -55,9 +57,10 @@ private:
     // Publishers
     rclcpp::Publisher<rosmower_msgs::msg::Perimeter>::SharedPtr peri_pub;
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr button_pub;
-    rclcpp::Publisher<rosmower_msgs::msg::Bumper>::SharedPtr bumper_pub;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bumper_left_pub;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bumper_right_pub;
     rclcpp::Publisher<rosmower_msgs::msg::MowMotor>::SharedPtr mow_pub;
-    rclcpp::Publisher<rosmower_msgs::msg::Battery>::SharedPtr battery_pub;
+    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub;
     rclcpp::Publisher<rosmower_msgs::msg::Switches>::SharedPtr switches_pub;
     // rclcpp::Publisher bumper_pointcloud_pub;
 
