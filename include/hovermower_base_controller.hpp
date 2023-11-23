@@ -4,8 +4,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include "protocol.hpp"
 #include "rosmower_msgs/msg/perimeter.hpp"
-#include "rosmower_msgs/msg/bumper.hpp"
-#include "rosmower_msgs/msg/battery.hpp"
 #include "rosmower_msgs/msg/mow_motor.hpp"
 #include "rosmower_msgs/msg/switches.hpp"
 #include "rosmower_msgs/srv/set_mow_motor.hpp"
