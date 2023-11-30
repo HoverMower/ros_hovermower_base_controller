@@ -28,6 +28,9 @@ HoverMowerBaseController::HoverMowerBaseController(std::string name) : Node(name
      {
           bumper_left_pub = create_publisher<std_msgs::msg::Bool>("hovermower/sensors/bumper/left", 3);
           bumper_right_pub = create_publisher<std_msgs::msg::Bool>("hovermower/sensors/bumper/right", 3);
+
+          bumper_left_range_pub = create_publisher<sensor_msgs::msg::Range>("hovermower/sensors/bumper/range", 3);
+          bumper_right_range_pub = create_publisher<sensor_msgs::msg::Range>("hovermower/sensors/bumper/range", 3);
      }
 
      if (MOW)
@@ -291,6 +294,38 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
 
                     bumper_left_pub->publish(bumperleft);
                     bumper_right_pub->publish(bumperright);
+
+                    // publish bumper as range sensor
+                    sensor_msgs::msg::Range bump_left_range;
+                    sensor_msgs::msg::Range bump_right_range;
+
+                    bump_left_range.radiation_type = bump_right_range.radiation_type = sensor_msgs::msg::Range::INFRARED;
+                    bump_left_range.field_of_view = bump_right_range.field_of_view = 0.15;
+                    bump_left_range.min_range = bump_left_range.max_range =
+                        bump_right_range.min_range = bump_right_range.max_range = 0.1;
+                    bump_left_range.header.stamp = bump_right_range.header.stamp = get_clock()->now();
+                    bump_left_range.header.frame_id = "bumper_left";
+                    bump_right_range.header.frame_id = "bumper_right";
+                    if (msg.bumperLeft)
+                    {
+                         bump_left_range.range = -1 * std::numeric_limits<sensor_msgs::msg::Range::_range_type>::infinity();
+                    }
+                    else
+                    {
+                         bump_left_range.range = std::numeric_limits<sensor_msgs::msg::Range::_range_type>::infinity();
+                    }
+
+                    if (msg.bumperRight)
+                    {
+                         bump_right_range.range = -1 * std::numeric_limits<sensor_msgs::msg::Range::_range_type>::infinity();
+                    }
+                    else
+                    {
+                         bump_right_range.range = std::numeric_limits<sensor_msgs::msg::Range::_range_type>::infinity();
+                    }
+
+                    bumper_left_range_pub->publish(bump_left_range);
+                    bumper_right_range_pub->publish(bump_right_range);
                }
                if (BUTTON)
                {
