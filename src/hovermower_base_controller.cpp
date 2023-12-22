@@ -259,6 +259,9 @@ void HoverMowerBaseController::protocol_recv(unsigned char byte)
                sensor_msgs::msg::BatteryState battery;
                battery.voltage = (float)msg.batVoltage / 100;
                battery.current = (float)msg.chgCurrent / 100;
+               battery.present = true;
+               battery.power_supply_technology = sensor_msgs::msg::BatteryState::POWER_SUPPLY_TECHNOLOGY_LION;
+               
                switch (msg.chgStatus)
                {
                case 0:
